@@ -7,7 +7,8 @@ save_prefix = 'data/'
 splitted_data_prefix = save_prefix + 'splitted/'
 save_filenames = ['total_preprocessed', 'subreddits', 'dataset']
 data_checkpoints_prefix = save_prefix + 'data_checkpoints/'
-SAVE_CHECKPOINTS = True
+SAVE_CHECKPOINTS = False
+FROM_CHECKPOINTS = True
 
 def preprocess_job(filename):
 
@@ -25,6 +26,7 @@ def preprocess_job(filename):
             except ValueError:
                 pass  # do nothing!
 
+    # save batches of preprocessed data
     if SAVE_CHECKPOINTS:
         for i, file_ in enumerate(save_filenames):
             with open (data_checkpoints_prefix + file_ + '_' + filename.split(os.sep)[-1] + '.pkl', 'wb') as f:
@@ -34,16 +36,30 @@ def preprocess_job(filename):
 
     return to_save
 
-def preprocess(directory_of_splitted_files):
-    for r, d, f in os.walk(directory_of_splitted_files):
-        arg_instances = [splitted_data_prefix + s for s in f]
-        break
+def preprocess(directory, from_checkpoints=False):
+    # conglomerate previously preprocessed batches into one and save
+    if from_checkpoints:
+        to_save = [[],[],[]]
 
-    print (arg_instances)
-    
-    to_save = Parallel(n_jobs=-1, verbose=5, backend="threading")(
-        map(delayed(preprocess_job), arg_instances))
+        for i, filename in enumerate(save_filenames):
+            for r, d, f in os.walk(directory):
+                individuals = [directory + s for s in f if filename in s]
+                break
 
+            for file_ in individuals: 
+                with open (file_, 'rb') as f:
+                    to_save[i] = to_save[i] + pickle.load(f)
+
+    # preprocess by batches using multithreading then save
+    else:
+        for r, d, f in os.walk(directory):
+            arg_instances = [directory + s for s in f]
+            break
+        
+        to_save = Parallel(n_jobs=-1, verbose=5, backend="threading")(
+            map(delayed(preprocess_job), arg_instances))
+
+    # save entire dataset via pickle   
     for i, filename in enumerate(save_filenames):
         with open (save_prefix + filename + '.pkl', 'wb') as f:
             pickle.dump(to_save[i], f)
@@ -54,4 +70,7 @@ def load(filename='dataset'):
     return dataset
 
 if __name__ == '__main__':
-    preprocess(save_prefix + 'splitted/')
+    if FROM_CHECKPOINTS:
+        preprocess(data_checkpoints_prefix, from_checkpoints=FROM_CHECKPOINTS)
+    else:
+        preprocess(splitted_data_prefix, from_checkpoints=FROM_CHECKPOINTS)

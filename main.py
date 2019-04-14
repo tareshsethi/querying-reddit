@@ -1,11 +1,9 @@
 from preprocess import load
 
 PREPROCESS = False
-dataset_filename = 'dataset_small'
+dataset_filename = 'dataset'
 
 def main ():
-    if PREPROCESS:
-        preprocess ('safe_links_all')
     dataset = load(dataset_filename)
     print (len(dataset))
     print ('yay')
