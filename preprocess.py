@@ -1,7 +1,7 @@
 import ast
-import pickle
 from joblib import Parallel, delayed
 import os
+from utils import *
 
 save_prefix = 'data/'
 splitted_data_prefix = save_prefix + 'splitted/'
@@ -29,8 +29,7 @@ def preprocess_job(filename):
     # save batches of preprocessed data
     if SAVE_CHECKPOINTS:
         for i, file_ in enumerate(save_filenames):
-            with open (data_checkpoints_prefix + file_ + '_' + filename.split(os.sep)[-1] + '.pkl', 'wb') as f:
-                pickle.dump(to_save[i], f)
+            save (to_save[i], data_checkpoints_prefix + file_ + '_' + filename.split(os.sep)[-1] + '.pkl')
 
     print ('finish job')
 
@@ -47,8 +46,7 @@ def preprocess(directory, from_checkpoints=False):
                 break
 
             for file_ in individuals: 
-                with open (file_, 'rb') as f:
-                    to_save[i] = to_save[i] + pickle.load(f)
+                to_save[i] = to_save[i] + load (file_)
 
     # preprocess by batches using multithreading then save
     else:
@@ -61,16 +59,13 @@ def preprocess(directory, from_checkpoints=False):
 
     # save entire dataset via pickle   
     for i, filename in enumerate(save_filenames):
-        with open (save_prefix + filename + '.pkl', 'wb') as f:
-            pickle.dump(to_save[i], f)
+        save (to_save[i], save_prefix + filename + '.pkl')
 
-def load(filename='dataset'):
-    with open (save_prefix + filename + '.pkl', 'rb') as f:
+
+def load(filepath):
+    with open (filepath, 'rb') as f:
         dataset = pickle.load(f)
     return dataset
 
 if __name__ == '__main__':
-    if FROM_CHECKPOINTS:
-        preprocess(data_checkpoints_prefix, from_checkpoints=FROM_CHECKPOINTS)
-    else:
-        preprocess(splitted_data_prefix, from_checkpoints=FROM_CHECKPOINTS)
+    preprocess(data_checkpoints_prefix, from_checkpoints=FROM_CHECKPOINTS)
