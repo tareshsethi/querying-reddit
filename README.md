@@ -5,7 +5,10 @@
 * preprocess.py - Code for weeding out the examples that are not images (pngs or jpgs), and a place to add further preprocessing if necessary
 * train.py - Code for training of second implementation below
 * utils.py - toolbox including pickle and data conversions
-* model.py - neural network code for second implementaion below
+* query.py - interface for getting the query, call after running train.py. Format - enter queries followed by weights as shown here
+```bash
+query -q apple banana -w 0.3 0.7
+```
 
 ## Ideas
 
