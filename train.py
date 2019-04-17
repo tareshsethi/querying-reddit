@@ -13,6 +13,8 @@ subreddits_path = 'data/subreddits.pkl'
 glove_to_word2vec_file = data_prefix + 'word2vec.txt'
 
 DO_TFIDF = False
+GENERATE_SENTENCE_EMBEDDINGS = False
+GENERATE_KEYWORDS_EMBEDDINGS_LIST_MATRIX = True
 
 def fit_to_tfidf(data, do_tfidf=True):
     if do_tfidf:
@@ -43,6 +45,7 @@ def get_keyword_embeddings_list_matrix(X, features, word_vectors, embedding_size
             if feat in word_vectors:
                 matrix[i] += np.array(word_vectors[feat])
                 j += 1
+        print (i)
     return matrix / top_n
 
 def train(dataset, do_tfidf=True):
@@ -51,30 +54,29 @@ def train(dataset, do_tfidf=True):
     word_vectors = word_embedding_model.wv
     embedding_size = word_vectors['the'].shape[0]
 
-    print ('hey')
-
-    # pass reddit posts through sentence encodings from facebook
-    V = 2
-    MODEL_PATH = 'InferSent/encoder/infersent%s.pickle' % V
-    params_model = {'bsize': 64, 'word_emb_dim': 300, 'enc_lstm_dim': 2048,
-                'pool_type': 'max', 'dpout_model': 0.0, 'version': V}
-    infersent = InferSent(params_model)
-    infersent.load_state_dict(torch.load(MODEL_PATH))
-    W2V_PATH = 'InferSent/dataset/fastText/crawl-300d-2M.vec'
-    infersent.set_w2v_path(W2V_PATH)
-    infersent.build_vocab(dataset, tokenize=True)
-    embeddings = infersent.encode(dataset, tokenize=True)
-    save(embeddings, data_prefix + 'embeddings.pkl')
-
-    print ('yay')
-
-    return
-
+    if GENERATE_SENTENCE_EMBEDDINGS:
+        # pass reddit posts through sentence encodings from facebook
+        V = 2
+        MODEL_PATH = 'InferSent/encoder/infersent%s.pickle' % V
+        params_model = {'bsize': 64, 'word_emb_dim': 300, 'enc_lstm_dim': 2048,
+                    'pool_type': 'max', 'dpout_model': 0.0, 'version': V}
+        infersent = InferSent(params_model)
+        infersent.load_state_dict(torch.load(MODEL_PATH))
+        W2V_PATH = 'InferSent/dataset/fastText/crawl-300d-2M.vec'
+        infersent.set_w2v_path(W2V_PATH)
+        infersent.build_vocab(dataset, tokenize=True)
+        embeddings = infersent.encode(dataset, tokenize=True)
+        save(embeddings, data_prefix + 'embeddings.pkl')
+    else:
+        embeddings = load(data_prefix + 'embeddings.pkl')
 
     # fit to tfidf
     X, feature_names = fit_to_tfidf(dataset, do_tfidf=do_tfidf)
-    matrix_keyword_embeddings = get_keyword_embeddings_list_matrix(X, feature_names, word_vectors, embedding_size, top_n=5)
-    save(matrix, data_prefix + 'matrix_keyword_embeddings.pkl')
+    if GENERATE_KEYWORDS_EMBEDDINGS_LIST_MATRIX:
+        keyword_embeddings_list_matrix = get_keyword_embeddings_list_matrix(X, feature_names, word_vectors, embedding_size, top_n=5)
+        save(keyword_embeddings_list_matrix, data_prefix + 'matrix_keyword_embeddings.pkl')
+    else:
+        keyword_embeddings_list_matrix = load(data_prefix + 'matrix_keyword_embeddings.pkl')
 
     return
 
@@ -96,19 +98,44 @@ def train(dataset, do_tfidf=True):
     
     # training algorithm
 
-    # best_model_wts = copy.deepcopy(model.state_dict())
-    # for epoch in range(50):
-    #     for epoch in range(num_epochs):
-# 
-# 
-# 
-        # y_pred = model(x)
-        # loss = F.cosine_similarity(y_pred, y)
-        # if epoch % 100:
-        #     print('epoch: ', epoch,' loss: ', np.mean(loss.data))
-        # optimizer.zero_grad()
-        # loss.backward()
-        # optimizer.step()
+    num_epochs = 50
+    dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=4,
+        shuffle=True, num_workers=4) for x in ['train', 'val']
+    }
+
+    best_model_wts = copy.deepcopy(model.state_dict())
+    for epoch in range(num_epochs):
+        for phase in ['train', 'val']:
+            if phase == 'train':
+                model.train(True)
+            else:
+                model.train(False)
+
+            running_loss = 0.0
+            best_score = 0.0
+
+            for data in dataloaders[phase]:
+                inputs, ground_truth_outputs = data
+                inputs, ground_truth_outputs = Variable(inputs), Variable(ground_truth_outputs)
+
+                optimizer.zero_grad()
+                outputs = model(inputs)
+
+                loss = -1 * np.mean(F.cosine_similarity(outputs, ground_truth_outputs))
+                if phase == 'train':
+                    loss.backward()
+                    optimizer.step()
+
+                running_loss += np.average(loss.data) * inputs.size(0)
+
+
+        y_pred = model(x)
+        loss = F.cosine_similarity(y_pred, y)
+        if epoch % 100:
+            print('epoch: ', epoch,' loss: ', np.mean(loss.data))
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
 
 
 if __name__ == '__main__':
