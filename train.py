@@ -26,10 +26,30 @@ def fit_to_tfidf(data, do_tfidf=True):
         feature_names = load (data_prefix + 'feature_names.pkl')
     return X, feature_names
 
+def tfidf_feats_ranked_in_row(row, features):
+    ids_ranked = np.argsort(row)[::-1]
+    feats_ranked = [features[i] for i in ids_ranked]
+    return feats_ranked
+
+def get_keyword_embeddings_list_matrix(X, features, word_vectors, embedding_size, top_n=5):
+    n = len(features)
+    matrix = np.zeros((n, embedding_size))
+    for i in range (n):
+        row = np.squeeze(X[i].toarray())
+        best_feats = tfidf_feats_ranked_in_row(row, features)
+        j = 0
+        while j != top_n:
+            feat = best_feats[j]
+            if feat in word_vectors:
+                matrix[i] += np.array(word_vectors[feat])
+                j += 1
+    return matrix / top_n
+
 def train(dataset, do_tfidf=True):
     # Word2Vec
     word_embedding_model = KeyedVectors.load_word2vec_format(glove_to_word2vec_file, binary=False)
     word_vectors = word_embedding_model.wv
+    embedding_size = word_vectors['the'].shape[0]
 
     print ('hey')
 
@@ -40,11 +60,11 @@ def train(dataset, do_tfidf=True):
                 'pool_type': 'max', 'dpout_model': 0.0, 'version': V}
     infersent = InferSent(params_model)
     infersent.load_state_dict(torch.load(MODEL_PATH))
-    W2V_PATH = 'InferSent/fastText/crawl-300d-2M.vec'
+    W2V_PATH = 'InferSent/dataset/fastText/crawl-300d-2M.vec'
     infersent.set_w2v_path(W2V_PATH)
     infersent.build_vocab(dataset, tokenize=True)
     embeddings = infersent.encode(dataset, tokenize=True)
-
+    save(embeddings, data_prefix + 'embeddings.pkl')
 
     print ('yay')
 
@@ -53,11 +73,13 @@ def train(dataset, do_tfidf=True):
 
     # fit to tfidf
     X, feature_names = fit_to_tfidf(dataset, do_tfidf=do_tfidf)
+    matrix_keyword_embeddings = get_keyword_embeddings_list_matrix(X, feature_names, word_vectors, embedding_size, top_n=5)
+    save(matrix, data_prefix + 'matrix_keyword_embeddings.pkl')
 
     return
 
     # initialize neural network
-    features_in = list(word_vectors.values())[0]
+    features_in = list(word_vectors.values())[0].shape[0]
     out = 100
     hidden_size = int((features_in + out)/ 2)
     model = nn.Sequential(
@@ -74,14 +96,19 @@ def train(dataset, do_tfidf=True):
     
     # training algorithm
 
-    for epoch in range(50):
-        y_pred = model(x)
-        loss = F.cosine_similarity(y_pred, y)
-        if epoch % 100:
-            print('epoch: ', epoch,' loss: ', np.mean(loss.data))
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
+    # best_model_wts = copy.deepcopy(model.state_dict())
+    # for epoch in range(50):
+    #     for epoch in range(num_epochs):
+# 
+# 
+# 
+        # y_pred = model(x)
+        # loss = F.cosine_similarity(y_pred, y)
+        # if epoch % 100:
+        #     print('epoch: ', epoch,' loss: ', np.mean(loss.data))
+        # optimizer.zero_grad()
+        # loss.backward()
+        # optimizer.step()
 
 
 if __name__ == '__main__':
