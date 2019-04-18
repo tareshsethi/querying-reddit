@@ -5,7 +5,26 @@
 * preprocess.py - Code for weeding out the examples that are not images (pngs or jpgs), and a place to add further preprocessing if necessary
 * train.py - Code for training of second implementation below
 * utils.py - toolbox including pickle and data conversions
-* query.py - interface for getting the query, call after running train.py. Format - enter queries followed by weights as shown here
+* query.py - interface for getting the query, call after running train.py. Format - enter queries followed by weights
+```bash
+query -q apple banana -w 0.3 0.7
+```
+
+## Setting Up
+Run the following to install the necessary packages in a virtual environment
+```bash
+pip install -r requirements.txt
+```
+First, preprocess the data by running preprocess.py, setting the appropriate data_prefix
+```bash
+python preprocess.py
+```
+Then, git clone InferSent (https://github.com/facebookresearch/InferSent) inside querying-reddit and follow the installation steps listed on their github to download the data and use the pre-trained model (infersent2 on fastText). Note ensure to set W2V_PATH to data_prefix/crawl-300d-2M-subword.vec
+Then train the model, setting the appropriate flags in the first few lines of train.py
+```bash
+python train.py
+```
+Finally enter a sample query of keywords and its appropriate weights that must sum to 1 (Example below), making sure to set the model location in query's main functino
 ```bash
 query -q apple banana -w 0.3 0.7
 ```
