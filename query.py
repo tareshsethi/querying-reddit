@@ -16,7 +16,6 @@ def query(queries, weights, model, word_vectors, embeddings, dataset):
         input_ = torch.sum(input_, 1)
     output = model(input_)
     outputs = torch.cat([output.unsqueeze(0) for i in range(len(dataset))], 0)
-    outputs = torch.zeros(20000,4096)
     top_5_doc_indices_sorted = np.argsort(-1 * F.cosine_similarity(outputs, torch.from_numpy(embeddings)),0)[:5]
     docs = [dataset[doc_index] for doc_index in top_5_doc_indices_sorted]
     print ('Closest 5 matches:')
