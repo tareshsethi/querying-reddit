@@ -17,10 +17,10 @@ dataset_path = '/media/sdc1/extra_space/data/dataset.pkl'
 subreddits_path = '/media/sdc1/extra_space/data/subreddits.pkl'
 glove_to_word2vec_file = data_prefix + 'word2vec.txt'
 
-DO_TFIDF = False
+DO_TFIDF = True
 USE_SMALL_DATSET = True
-GENERATE_SENTENCE_EMBEDDINGS = False
-GENERATE_KEYWORDS_EMBEDDINGS_LIST_MATRIX = False
+GENERATE_SENTENCE_EMBEDDINGS = True
+GENERATE_KEYWORDS_EMBEDDINGS_LIST_MATRIX = True
 
 def fit_to_tfidf(data, do_tfidf=True):
     if do_tfidf:

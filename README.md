@@ -15,16 +15,16 @@ Run the following to install the necessary packages in a virtual environment
 ```bash
 pip install -r requirements.txt
 ```
-First, preprocess the data by running preprocess.py, setting the appropriate data_prefix
+First, preprocess the data once by running preprocess.py, setting the appropriate data_prefix
 ```bash
 python preprocess.py
 ```
-Then, git clone InferSent (https://github.com/facebookresearch/InferSent) inside querying-reddit and follow the installation steps listed on their github to download the data and use the pre-trained model (infersent2 on fastText). Note ensure to set W2V_PATH to data_prefix/crawl-300d-2M-subword.vec
-Then train the model, setting the appropriate flags in the first few lines of train.py
+Then, git clone InferSent (https://github.com/facebookresearch/InferSent) inside querying-reddit and follow the installation steps listed on their github to download the data and use the pre-trained model (infersent2 on fastText) (only have to do this once). Note to ensure to set W2V_PATH to data_prefix/crawl-300d-2M-subword.vec when doing this.
+Then train the model, setting the appropriate flags in the first few lines of train.py, specifically setting the DO_TFIDF, GENERATE_SENTENCE_EMBEDDINGS, GENERATE_KEYWORDS_EMBEDDINGS_LIST_MATRIX to False if those steps have already executed and you just want to load from pkl files
 ```bash
 python train.py
 ```
-Finally enter a sample query of keywords and its appropriate weights that must sum to 1 (Example below), making sure to set the model location in query's main functino
+Finally enter a sample query of keywords and its appropriate weights that must sum to 1 (Example below), making sure to set the model location in query's main function
 ```bash
 query -q apple banana -w 0.3 0.7
 ```

@@ -8,7 +8,7 @@ import numpy as np
 data_prefix = '/media/sdc1/extra_space/data/'
 glove_to_word2vec_file = data_prefix + 'word2vec.txt'
 dataset_path = data_prefix + 'dataset.pkl'
-USE_SMALL_DATSET = True
+USE_SMALL_DATASET = True
 
 def query(queries, weights, model, word_vectors, embeddings, dataset):
     input_ = torch.cat([torch.from_numpy(word_vectors[queries[i]] * weights[i]) for i in range(len(queries))])
@@ -43,7 +43,7 @@ if __name__ == '__main__':
 
     # load dataset of sentences
     dataset = load(dataset_path)
-    if USE_SMALL_DATSET:
+    if USE_SMALL_DATASET:
         dataset = dataset[:20000]
 
     # check input
