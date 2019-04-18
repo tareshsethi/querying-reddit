@@ -3,7 +3,7 @@ from joblib import Parallel, delayed
 import os
 from utils import *
 
-save_prefix = 'data/'
+save_prefix = '/media/sdc1/extra_space/data/'
 splitted_data_prefix = save_prefix + 'splitted/'
 save_filenames = ['total_preprocessed', 'subreddits', 'dataset']
 data_checkpoints_prefix = save_prefix + 'data_checkpoints/'
@@ -60,12 +60,6 @@ def preprocess(directory, from_checkpoints=False):
     # save entire dataset via pickle   
     for i, filename in enumerate(save_filenames):
         save (to_save[i], save_prefix + filename + '.pkl')
-
-
-def load(filepath):
-    with open (filepath, 'rb') as f:
-        dataset = pickle.load(f)
-    return dataset
 
 if __name__ == '__main__':
     preprocess(data_checkpoints_prefix, from_checkpoints=FROM_CHECKPOINTS)
