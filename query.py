@@ -16,7 +16,7 @@ def query(queries, weights, model, word_vectors, embeddings, dataset):
         input_ = torch.sum(input_, 1)
     output = model(input_)
     outputs = torch.cat([output.unsqueeze(0) for i in range(len(dataset))], 0)
-    top_5_doc_indices_sorted = np.argsort(-1 * F.cosine_similarity(outputs, torch.from_numpy(embeddings)),0)[:5]
+    top_5_doc_indices_sorted = torch.argsort(-1 * F.cosine_similarity(outputs, torch.from_numpy(embeddings)),0)[:5]
     docs = [dataset[doc_index] for doc_index in top_5_doc_indices_sorted]
     print ('Closest 5 matches:')
     print (docs)
@@ -31,7 +31,7 @@ if __name__ == '__main__':
     weights = [float(s) for s in args.weights]
 
     # load neural network model
-    model = torch.load(data_prefix + '40_model.pt')
+    model = torch.load(data_prefix + '49_model.pt')
     
     # load word embedding model
     word_embedding_model = KeyedVectors.load_word2vec_format(glove_to_word2vec_file, binary=False)
