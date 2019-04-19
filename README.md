@@ -7,7 +7,7 @@
 * utils.py - toolbox including pickle and data conversions
 * query.py - interface for getting the query, call after running train.py. Format - enter queries followed by weights
 ```bash
-query -q apple banana -w 0.3 0.7
+python query -q apple banana -w 0.3 0.7
 ```
 
 ## Setting Up
@@ -26,7 +26,7 @@ python train.py
 ```
 Finally enter a sample query of keywords and its appropriate weights that must sum to 1 (Example below), making sure to set the model location in query's main function
 ```bash
-query -q apple banana -w 0.3 0.7
+python query -q apple banana -w 0.3 0.7
 ```
 
 ## Ideas
